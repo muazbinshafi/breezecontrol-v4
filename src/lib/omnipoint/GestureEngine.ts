@@ -492,7 +492,10 @@ export class GestureEngine {
       state.lastScrollY = null;
       if (state.clickState === "UP") {
         if (state.pinchBeganAt === 0) state.pinchBeganAt = tNow;
-        if (tNow - state.pinchBeganAt >= this.debounceMs) {
+        // Two gates before firing DOWN:
+        //  • debounceMs   — ignores single-frame noise
+        //  • pinchDwellMs — extra dwell eliminates fast-flick false clicks
+        if (tNow - state.pinchBeganAt >= this.debounceMs + this.pinchDwellMs) {
           state.clickState = "DOWN";
           gesture = "click";
         } else {
