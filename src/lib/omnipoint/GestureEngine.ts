@@ -158,10 +158,16 @@ export class GestureEngine {
   private rafId = 0;
   private lastVideoTime = -1;
   private frameTimes: number[] = [];
+  private lastInferenceMs = 0;
+  private frameSkipParity = false;
 
   private readonly debounceMs = 18;
   private readonly staticFrames = 2;
   private readonly scrollMinIntervalMs = 1000 / 120;
+  // If MediaPipe inference exceeds this budget, skip every other frame and
+  // let the OneEuro filter interpolate. Keeps the cursor visually smooth on
+  // mid-tier hardware where the model alone uses ~30ms+ per frame.
+  private readonly inferenceBudgetMs = 28;
 
   constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement, bridge: HIDBridge, config: EngineConfig) {
     this.video = video;
@@ -264,11 +270,22 @@ export class GestureEngine {
       this.draw(null);
       return;
     }
+    // Frame-budget guard: if the previous inference blew the budget,
+    // skip every other frame to keep the rAF loop responsive. The cursor
+    // stays smooth because OneEuroFilter interpolates between samples.
+    if (this.lastInferenceMs > this.inferenceBudgetMs) {
+      this.frameSkipParity = !this.frameSkipParity;
+      if (this.frameSkipParity) {
+        this.draw(null);
+        return;
+      }
+    }
     this.lastVideoTime = this.video.currentTime;
 
     const t0 = performance.now();
     const result = this.landmarker.detectForVideo(this.video, tNow);
     const inferenceMs = performance.now() - t0;
+    this.lastInferenceMs = inferenceMs;
 
     this.frameTimes.push(tNow);
     while (this.frameTimes.length && tNow - this.frameTimes[0] > 1000) this.frameTimes.shift();

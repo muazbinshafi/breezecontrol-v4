@@ -20,9 +20,10 @@ export class OneEuroFilter {
     this.dCutoff = dCutoff;
   }
 
-  setParams(minCutoff: number, beta: number) {
+  setParams(minCutoff: number, beta: number, dCutoff?: number) {
     this.minCutoff = minCutoff;
     this.beta = beta;
+    if (dCutoff !== undefined) this.dCutoff = dCutoff;
   }
 
   reset() {
@@ -42,7 +43,10 @@ export class OneEuroFilter {
       this.tPrev = tNowMs;
       return x;
     }
-    const dt = Math.max(0.001, (tNowMs - this.tPrev) / 1000);
+    // Clamp dt to a sane floor (~8ms ≈ 120 Hz). A previous floor of 1ms could
+    // cause the velocity term (x - xPrev)/dt to blow up on quick MediaPipe
+    // re-detections, which then over-loosens the adaptive cutoff.
+    const dt = Math.max(0.008, (tNowMs - this.tPrev) / 1000);
     this.tPrev = tNowMs;
 
     const dx = (x - this.xPrev) / dt;
