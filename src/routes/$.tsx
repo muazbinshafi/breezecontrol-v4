@@ -1,26 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 
-// Catch-all (splat) — matches any URL path. Mounts <App /> which uses
-// react-router-dom's BrowserRouter to do the real client-side routing.
+// All non-root URLs are handled by react-router-dom inside <App />, which is
+// mounted at "/". Redirect any direct hit on a deep URL to "/" so the single
+// BrowserRouter instance can take over and route to the real page.
 export const Route = createFileRoute("/$")({
-  component: AppHost,
+  component: SplatRedirect,
   ssr: false,
 });
 
-function AppHost() {
-  const [App, setApp] = useState<React.ComponentType | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    import("@/App").then((mod) => {
-      if (!cancelled) setApp(() => mod.default);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (!App) return null;
-  return <App />;
+function SplatRedirect() {
+  // Preserve the requested path so BrowserRouter renders the right page.
+  if (typeof window !== "undefined") {
+    const target = window.location.pathname + window.location.search + window.location.hash;
+    if (target && target !== "/") {
+      // Use replaceState so the back button still works naturally.
+      window.history.replaceState({}, "", target);
+    }
+  }
+  return <Navigate to="/" replace />;
 }

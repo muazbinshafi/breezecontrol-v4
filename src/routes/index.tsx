@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
-// TanStack Router is pinned to "/" via memory history (see src/router.tsx).
-// All actual URL routing is delegated to react-router-dom's BrowserRouter
-// inside <App />. This component is just a client-only mount point.
+// Single mount point for the legacy react-router-dom App.
+// Previously both `/` and `/$` mounted <App />, which created two
+// BrowserRouter instances and produced the React "setState during render"
+// error from TanStack's Transitioner. Keeping only one mount fixes it.
 export const Route = createFileRoute("/")({
   component: AppHost,
   ssr: false,
