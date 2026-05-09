@@ -57,6 +57,12 @@ export const Route = createRootRoute({
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
+      // Preconnect to MediaPipe CDNs so the /demo model + WASM start
+      // their TLS handshake while the page is still loading.
+      { rel: "preconnect", href: "https://cdn.jsdelivr.net", crossOrigin: "" },
+      { rel: "preconnect", href: "https://storage.googleapis.com", crossOrigin: "" },
+      { rel: "dns-prefetch", href: "https://cdn.jsdelivr.net" },
+      { rel: "dns-prefetch", href: "https://storage.googleapis.com" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap",
