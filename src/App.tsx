@@ -8,6 +8,7 @@ import { AuthProvider } from "@/lib/auth/AuthContext";
 import { useCloudProfileSync } from "@/hooks/useCloudProfileSync";
 import Index from "./pages/Index.tsx";
 import Demo from "./pages/Demo.tsx";
+import { CameraErrorBoundary } from "@/components/omnipoint/CameraErrorBoundary";
 import GestureGuide from "./pages/GestureGuide.tsx";
 import Install from "./pages/Install.tsx";
 import Docs from "./pages/Docs.tsx";
@@ -24,13 +25,18 @@ const queryClient = new QueryClient();
 // Internal child so it can use the AuthContext (provider is its parent).
 const AppRoutes = () => {
   useCloudProfileSync();
+  // Apply a shareable preset (?preset=...) once on first mount.
+  if (typeof window !== "undefined" && !(window as unknown as { __presetLoaded?: boolean }).__presetLoaded) {
+    (window as unknown as { __presetLoaded?: boolean }).__presetLoaded = true;
+    import("@/lib/omnipoint/GestureSettingsShare").then((m) => m.loadPresetFromUrl());
+  }
   return (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/guide" element={<GestureGuide />} />
-      <Route path="/demo" element={<Demo />} />
+      <Route path="/demo" element={<CameraErrorBoundary><Demo /></CameraErrorBoundary>} />
       <Route path="/install" element={<Install />} />
       <Route path="/docs" element={<Docs />} />
       <Route path="/bridge" element={<BridgeInstall />} />

@@ -3,10 +3,13 @@
 // shortcut applies.
 
 import { useState } from "react";
-import { Settings2, RotateCcw, Save, Plus, Trash2, Download, Upload } from "lucide-react";
+import { Settings2, RotateCcw, Save, Plus, Trash2, Download, Upload, Link2, FileDown } from "lucide-react";
 import { useGestureSettings } from "@/hooks/useGestureSettings";
 import { useGestureProfiles } from "@/hooks/useGestureProfiles";
 import { GestureProfileStore } from "@/lib/omnipoint/GestureProfiles";
+import { copyShareUrlToClipboard } from "@/lib/omnipoint/GestureSettingsShare";
+import { TelemetryStore } from "@/lib/omnipoint/TelemetryStore";
+import { toast } from "@/hooks/use-toast";
 import {
   GestureSettingsStore,
   ACTION_LABELS,
@@ -228,6 +231,29 @@ export function GestureSettingsPanel() {
                   className="h-8 font-mono text-[10px] tracking-[0.25em] border border-border text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5"
                 >
                   <Upload className="w-3 h-3" /> IMPORT
+                </button>
+                <button
+                  onClick={async () => {
+                    const url = await copyShareUrlToClipboard();
+                    toast({
+                      title: url ? "Share link copied" : "Couldn't copy link",
+                      description: url ? "Paste anywhere to share your tuning." : "Clipboard was blocked.",
+                    });
+                  }}
+                  className="h-8 font-mono text-[10px] tracking-[0.25em] border border-border text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5"
+                  title="Copy a URL that restores these settings"
+                >
+                  <Link2 className="w-3 h-3" /> SHARE LINK
+                </button>
+                <button
+                  onClick={() => {
+                    TelemetryStore.downloadCsv();
+                    toast({ title: "Telemetry exported", description: "Snapshot saved as CSV." });
+                  }}
+                  className="h-8 font-mono text-[10px] tracking-[0.25em] border border-border text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1.5"
+                  title="Download current telemetry snapshot"
+                >
+                  <FileDown className="w-3 h-3" /> EXPORT CSV
                 </button>
               </div>
             </section>
