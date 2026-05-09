@@ -88,5 +88,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+    const w = window as unknown as { __swReg?: boolean };
+    if (!w.__swReg) {
+      w.__swReg = true;
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch(() => {
+          /* SW registration is best-effort; site still works without it */
+        });
+      });
+    }
+  }
   return <Outlet />;
 }
