@@ -102,7 +102,10 @@ class HandState {
     this.indexMcp.setParams(cutoff * 0.85, beta);
     this.wrist.setParams(cutoff * 0.85, beta);
     this.middle.setParams(cutoff, beta);
-    this.cursorFilter.setParams(cutoff + 0.55, beta + 0.05);
+    // Cursor: higher beta makes the filter more responsive on fast motion
+    // (less lag when flicking) while the higher minCutoff keeps it glass-
+    // smooth at rest. Tuned for a noticeably snappier pointer feel.
+    this.cursorFilter.setParams(cutoff + 0.9, beta + 0.12);
   }
 
   reset() {
