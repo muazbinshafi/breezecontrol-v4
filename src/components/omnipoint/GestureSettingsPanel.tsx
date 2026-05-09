@@ -3,10 +3,13 @@
 // shortcut applies.
 
 import { useState } from "react";
-import { Settings2, RotateCcw, Save, Plus, Trash2, Download, Upload } from "lucide-react";
+import { Settings2, RotateCcw, Save, Plus, Trash2, Download, Upload, Link2, FileDown } from "lucide-react";
 import { useGestureSettings } from "@/hooks/useGestureSettings";
 import { useGestureProfiles } from "@/hooks/useGestureProfiles";
 import { GestureProfileStore } from "@/lib/omnipoint/GestureProfiles";
+import { copyShareUrlToClipboard } from "@/lib/omnipoint/GestureSettingsShare";
+import { TelemetryStore } from "@/lib/omnipoint/TelemetryStore";
+import { toast } from "@/hooks/use-toast";
 import {
   GestureSettingsStore,
   ACTION_LABELS,
