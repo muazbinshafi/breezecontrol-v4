@@ -36,7 +36,7 @@ const AppRoutes = () => {
       <Route path="/auth" element={<Auth />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/guide" element={<GestureGuide />} />
-      <Route path="/demo" element={<Demo />} />
+      <Route path="/demo" element={<CameraErrorBoundary><Demo /></CameraErrorBoundary>} />
       <Route path="/install" element={<Install />} />
       <Route path="/docs" element={<Docs />} />
       <Route path="/bridge" element={<BridgeInstall />} />
