@@ -8,6 +8,7 @@ import { AuthProvider } from "@/lib/auth/AuthContext";
 import { useCloudProfileSync } from "@/hooks/useCloudProfileSync";
 import Index from "./pages/Index.tsx";
 import Demo from "./pages/Demo.tsx";
+import { CameraErrorBoundary } from "@/components/omnipoint/CameraErrorBoundary";
 import GestureGuide from "./pages/GestureGuide.tsx";
 import Install from "./pages/Install.tsx";
 import Docs from "./pages/Docs.tsx";
