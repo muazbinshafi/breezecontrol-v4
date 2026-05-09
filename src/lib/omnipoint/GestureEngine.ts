@@ -165,6 +165,8 @@ export class GestureEngine {
   private frameSkipParity = false;
 
   private readonly debounceMs = 18;
+  /** Extra dwell required for an initial pinch DOWN (suppresses fast-flick false clicks). */
+  private readonly pinchDwellMs = 32;
   private readonly staticFrames = 2;
   private readonly scrollMinIntervalMs = 1000 / 120;
   // If MediaPipe inference exceeds this budget, skip every other frame and
@@ -490,7 +492,10 @@ export class GestureEngine {
       state.lastScrollY = null;
       if (state.clickState === "UP") {
         if (state.pinchBeganAt === 0) state.pinchBeganAt = tNow;
-        if (tNow - state.pinchBeganAt >= this.debounceMs) {
+        // Two gates before firing DOWN:
+        //  • debounceMs   — ignores single-frame noise
+        //  • pinchDwellMs — extra dwell eliminates fast-flick false clicks
+        if (tNow - state.pinchBeganAt >= this.debounceMs + this.pinchDwellMs) {
           state.clickState = "DOWN";
           gesture = "click";
         } else {

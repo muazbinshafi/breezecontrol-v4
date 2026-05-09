@@ -393,3 +393,13 @@
   .animate-accordion-down { animation: accordion-down 0.2s ease-out; }
   .animate-accordion-up { animation: accordion-up 0.2s ease-out; }
 }
+
+/* Respect users who request reduced motion at the OS level. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

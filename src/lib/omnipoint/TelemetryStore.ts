@@ -191,4 +191,44 @@ export const TelemetryStore = {
     snapshot = { ...snapshot, ...patch };
     emit();
   },
+  /**
+   * Export the current telemetry snapshot as a single-row CSV string.
+   * Useful for tuning sessions — paste into a spreadsheet to compare
+   * across calibration runs.
+   */
+  toCsvRow(): string {
+    const s = snapshot;
+    const cols = [
+      new Date().toISOString(),
+      s.fps,
+      s.inferenceMs.toFixed(2),
+      s.confidence.toFixed(3),
+      s.handsDetected,
+      s.handedness,
+      s.fingerCount,
+      s.pinchDistance.toFixed(3),
+      s.gesture,
+      s.precisionMode ? 1 : 0,
+      s.cursorX.toFixed(4),
+      s.cursorY.toFixed(4),
+      s.wsState,
+      s.bridgeError.code,
+    ];
+    const header =
+      "timestamp,fps,inference_ms,confidence,hands_detected,handedness,finger_count,pinch_distance,gesture,precision_mode,cursor_x,cursor_y,ws_state,bridge_code";
+    return `${header}\n${cols.join(",")}`;
+  },
+  /** Download current snapshot as a CSV file (browser-only). */
+  downloadCsv(filename = "breezecontrol-telemetry.csv") {
+    if (typeof window === "undefined") return;
+    const blob = new Blob([this.toCsvRow()], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 };
