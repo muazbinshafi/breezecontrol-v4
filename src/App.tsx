@@ -24,6 +24,11 @@ const queryClient = new QueryClient();
 // Internal child so it can use the AuthContext (provider is its parent).
 const AppRoutes = () => {
   useCloudProfileSync();
+  // Apply a shareable preset (?preset=...) once on first mount.
+  if (typeof window !== "undefined" && !(window as unknown as { __presetLoaded?: boolean }).__presetLoaded) {
+    (window as unknown as { __presetLoaded?: boolean }).__presetLoaded = true;
+    import("@/lib/omnipoint/GestureSettingsShare").then((m) => m.loadPresetFromUrl());
+  }
   return (
     <Routes>
       <Route path="/" element={<Index />} />
