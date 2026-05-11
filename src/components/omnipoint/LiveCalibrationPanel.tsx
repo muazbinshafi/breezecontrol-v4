@@ -70,10 +70,32 @@ export function LiveCalibrationPanel({
   const t = useTelemetry();
   const [floors, setFloors] = useState<DetectionFloors>(() => loadDetectionFloors());
   const [showOverlay, setShowOverlay] = useState(true);
+  const [tuning, setTuning] = useState(false);
+  const [tunePct, setTunePct] = useState(0);
 
   useEffect(() => {
     saveDetectionFloors(floors);
   }, [floors]);
+
+  const handleAutoTune = async () => {
+    if (tuning) return;
+    setTuning(true);
+    setTunePct(0);
+    toast({ title: "Auto-tune started", description: "Hold your hand naturally and pinch a few times for 8 seconds." });
+    try {
+      const res = await runAutoTune(8000, (p) => setTunePct(p));
+      setConfig(res.recommended);
+      toast({
+        title: "Auto-tune applied",
+        description: res.notes.join(" "),
+      });
+    } catch (err) {
+      toast({ title: "Auto-tune failed", description: String(err), variant: "destructive" });
+    } finally {
+      setTuning(false);
+      setTunePct(0);
+    }
+  };
 
   if (!open) return null;
 
