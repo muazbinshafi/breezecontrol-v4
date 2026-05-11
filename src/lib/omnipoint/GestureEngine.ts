@@ -617,7 +617,26 @@ export class GestureEngine {
     }
     state.lastPointerSample = { x, y, t: tNow };
     state.rawCursor = { x: clamp01(nextX), y: clamp01(nextY) };
-    const [sx, sy] = state.cursorFilter.filter(state.rawCursor.x, state.rawCursor.y, tNow);
+    let [sx, sy] = state.cursorFilter.filter(state.rawCursor.x, state.rawCursor.y, tNow);
+    // Radial dead-zone with smoothstep easing — anchored to the previously
+    // committed cursor position. Eliminates micro-jitter when the user is
+    // trying to hold still without introducing a hard "frozen" feel: the
+    // closer the new sample is to the prior cursor, the more it's pulled
+    // back. Past `dz`, full motion is preserved.
+    const dz = Math.max(0, Math.min(0.08, this.config.deadZone || 0));
+    if (dz > 0) {
+      const px = state.cursor.x;
+      const py = state.cursor.y;
+      const ddx = sx - px;
+      const ddy = sy - py;
+      const r = Math.hypot(ddx, ddy);
+      if (r < dz) {
+        const t = r / dz;            // 0..1
+        const e = t * t * (3 - 2 * t); // smoothstep easing
+        sx = px + ddx * e;
+        sy = py + ddy * e;
+      }
+    }
     state.cursor = { x: clamp01(sx), y: clamp01(sy) };
   }
 
