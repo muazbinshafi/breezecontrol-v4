@@ -152,6 +152,5 @@ PRs welcome! Good first issues:
 
 <div align="center">
 
-Built with ❤ on [Lovable](https://lovable.dev) · MIT licensed
-
+Built with ❤ by MuazBinShafi on [Lovable](https://lovable.dev)
 </div>
