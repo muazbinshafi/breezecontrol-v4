@@ -173,6 +173,11 @@ export class GestureEngine {
   // let the OneEuro filter interpolate. Keeps the cursor visually smooth on
   // mid-tier hardware where the model alone uses ~30ms+ per frame.
   private readonly inferenceBudgetMs = 28;
+  /** Idle-aware skip: how long the primary cursor must be ~stationary
+   *  with no actionable gesture before we drop to ~30fps inference. */
+  private readonly idleStationaryMs = 450;
+  private idleSinceMs = 0;
+  private idleSkipParity = false;
 
   constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement, bridge: HIDBridge, config: EngineConfig) {
     this.video = video;
