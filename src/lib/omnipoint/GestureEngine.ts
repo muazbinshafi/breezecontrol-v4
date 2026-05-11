@@ -173,6 +173,11 @@ export class GestureEngine {
   // let the OneEuro filter interpolate. Keeps the cursor visually smooth on
   // mid-tier hardware where the model alone uses ~30ms+ per frame.
   private readonly inferenceBudgetMs = 28;
+  /** Idle-aware skip: how long the primary cursor must be ~stationary
+   *  with no actionable gesture before we drop to ~30fps inference. */
+  private readonly idleStationaryMs = 450;
+  private idleSinceMs = 0;
+  private idleSkipParity = false;
 
   constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement, bridge: HIDBridge, config: EngineConfig) {
     this.video = video;
@@ -285,6 +290,21 @@ export class GestureEngine {
         return;
       }
     }
+    // Idle-aware skip: when the user is holding still with no action
+    // intent for >idleStationaryMs, halve inference rate (~30fps) to
+    // save CPU/GPU. The very next motion immediately rearms full rate.
+    const tel = TelemetryStore.get();
+    const isIdle = tel.handPresent &&
+      (tel.cursorX !== undefined && tel.cursorY !== undefined) &&
+      (tel.gesture === "none" || tel.gesture === "point") &&
+      this.idleSinceMs > 0 && (tNow - this.idleSinceMs) > this.idleStationaryMs;
+    if (isIdle) {
+      this.idleSkipParity = !this.idleSkipParity;
+      if (this.idleSkipParity) {
+        this.draw(null);
+        return;
+      }
+    }
     this.lastVideoTime = this.video.currentTime;
 
     const t0 = performance.now();
@@ -316,6 +336,12 @@ export class GestureEngine {
 
     this.emitMotion(primary.state, finalGesture, finalPressure, finalHand);
     this.lastPrimary = primary.side;
+
+    // Idle tracker — reset on any actionable gesture or rapid cursor motion.
+    const movingFast = primary.state.cursorSpeed > 0.06;
+    const hasAction = finalGesture !== "none" && finalGesture !== "point";
+    if (movingFast || hasAction) this.idleSinceMs = 0;
+    else if (this.idleSinceMs === 0) this.idleSinceMs = tNow;
 
     const allLandmarks = frames.flatMap((f) => f.landmarks);
     const handsDebug = this.createDebug(frames, primary.side);
@@ -591,7 +617,26 @@ export class GestureEngine {
     }
     state.lastPointerSample = { x, y, t: tNow };
     state.rawCursor = { x: clamp01(nextX), y: clamp01(nextY) };
-    const [sx, sy] = state.cursorFilter.filter(state.rawCursor.x, state.rawCursor.y, tNow);
+    let [sx, sy] = state.cursorFilter.filter(state.rawCursor.x, state.rawCursor.y, tNow);
+    // Radial dead-zone with smoothstep easing — anchored to the previously
+    // committed cursor position. Eliminates micro-jitter when the user is
+    // trying to hold still without introducing a hard "frozen" feel: the
+    // closer the new sample is to the prior cursor, the more it's pulled
+    // back. Past `dz`, full motion is preserved.
+    const dz = Math.max(0, Math.min(0.08, this.config.deadZone || 0));
+    if (dz > 0) {
+      const px = state.cursor.x;
+      const py = state.cursor.y;
+      const ddx = sx - px;
+      const ddy = sy - py;
+      const r = Math.hypot(ddx, ddy);
+      if (r < dz) {
+        const t = r / dz;            // 0..1
+        const e = t * t * (3 - 2 * t); // smoothstep easing
+        sx = px + ddx * e;
+        sy = py + ddy * e;
+      }
+    }
     state.cursor = { x: clamp01(sx), y: clamp01(sy) };
   }
 

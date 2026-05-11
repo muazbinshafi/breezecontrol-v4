@@ -13,9 +13,11 @@
 // session (with a clear "Apply on next start" hint).
 
 import { useEffect, useState } from "react";
-import { Activity, X, RefreshCw, Eye, EyeOff } from "lucide-react";
+import { Activity, X, RefreshCw, Eye, EyeOff, Wand2 } from "lucide-react";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import type { EngineConfig } from "@/lib/omnipoint/GestureEngine";
+import { runAutoTune } from "@/lib/omnipoint/AutoTune";
+import { toast } from "@/hooks/use-toast";
 
 const FLOORS_STORAGE = "omnipoint.detectionFloors.v1";
 
@@ -68,10 +70,32 @@ export function LiveCalibrationPanel({
   const t = useTelemetry();
   const [floors, setFloors] = useState<DetectionFloors>(() => loadDetectionFloors());
   const [showOverlay, setShowOverlay] = useState(true);
+  const [tuning, setTuning] = useState(false);
+  const [tunePct, setTunePct] = useState(0);
 
   useEffect(() => {
     saveDetectionFloors(floors);
   }, [floors]);
+
+  const handleAutoTune = async () => {
+    if (tuning) return;
+    setTuning(true);
+    setTunePct(0);
+    toast({ title: "Auto-tune started", description: "Hold your hand naturally and pinch a few times for 8 seconds." });
+    try {
+      const res = await runAutoTune(8000, (p) => setTunePct(p));
+      setConfig(res.recommended);
+      toast({
+        title: "Auto-tune applied",
+        description: res.notes.join(" "),
+      });
+    } catch (err) {
+      toast({ title: "Auto-tune failed", description: String(err), variant: "destructive" });
+    } finally {
+      setTuning(false);
+      setTunePct(0);
+    }
+  };
 
   if (!open) return null;
 
@@ -201,10 +225,10 @@ export function LiveCalibrationPanel({
               label="DEAD ZONE"
               value={config.deadZone}
               min={0}
-              max={0.005}
-              step={0.0001}
+              max={0.05}
+              step={0.001}
               onChange={(v) => setConfig({ deadZone: v })}
-              hint="Ignore micro-jitter below this speed"
+              hint="Radial micro-jitter suppression with smooth easing"
             />
             <Slider
               label="SENSITIVITY"
@@ -260,6 +284,16 @@ export function LiveCalibrationPanel({
               apply.
             </p>
           </Section>
+
+          {/* Auto-tune */}
+          <button
+            onClick={handleAutoTune}
+            disabled={tuning}
+            className="w-full inline-flex items-center justify-center gap-2 h-9 border border-emerald-glow/60 text-emerald-glow hover:bg-emerald-glow/10 disabled:opacity-60 disabled:cursor-not-allowed font-mono text-[10px] tracking-[0.3em]"
+          >
+            <Wand2 className="w-3.5 h-3.5" />
+            {tuning ? `AUTO-TUNING ${Math.round(tunePct * 100)}%` : "AUTO-TUNE (8s)"}
+          </button>
 
           {/* Always-available manual reset */}
           <button
