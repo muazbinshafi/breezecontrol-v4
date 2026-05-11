@@ -225,10 +225,10 @@ export function LiveCalibrationPanel({
               label="DEAD ZONE"
               value={config.deadZone}
               min={0}
-              max={0.005}
-              step={0.0001}
+              max={0.05}
+              step={0.001}
               onChange={(v) => setConfig({ deadZone: v })}
-              hint="Ignore micro-jitter below this speed"
+              hint="Radial micro-jitter suppression with smooth easing"
             />
             <Slider
               label="SENSITIVITY"
