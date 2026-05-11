@@ -290,6 +290,21 @@ export class GestureEngine {
         return;
       }
     }
+    // Idle-aware skip: when the user is holding still with no action
+    // intent for >idleStationaryMs, halve inference rate (~30fps) to
+    // save CPU/GPU. The very next motion immediately rearms full rate.
+    const tel = TelemetryStore.get();
+    const isIdle = tel.handPresent &&
+      (tel.cursorX !== undefined && tel.cursorY !== undefined) &&
+      (tel.gesture === "none" || tel.gesture === "point") &&
+      this.idleSinceMs > 0 && (tNow - this.idleSinceMs) > this.idleStationaryMs;
+    if (isIdle) {
+      this.idleSkipParity = !this.idleSkipParity;
+      if (this.idleSkipParity) {
+        this.draw(null);
+        return;
+      }
+    }
     this.lastVideoTime = this.video.currentTime;
 
     const t0 = performance.now();
