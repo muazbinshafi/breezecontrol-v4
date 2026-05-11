@@ -13,9 +13,11 @@
 // session (with a clear "Apply on next start" hint).
 
 import { useEffect, useState } from "react";
-import { Activity, X, RefreshCw, Eye, EyeOff } from "lucide-react";
+import { Activity, X, RefreshCw, Eye, EyeOff, Wand2 } from "lucide-react";
 import { useTelemetry } from "@/hooks/useTelemetry";
 import type { EngineConfig } from "@/lib/omnipoint/GestureEngine";
+import { runAutoTune } from "@/lib/omnipoint/AutoTune";
+import { toast } from "@/hooks/use-toast";
 
 const FLOORS_STORAGE = "omnipoint.detectionFloors.v1";
 
