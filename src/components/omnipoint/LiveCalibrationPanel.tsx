@@ -285,6 +285,16 @@ export function LiveCalibrationPanel({
             </p>
           </Section>
 
+          {/* Auto-tune */}
+          <button
+            onClick={handleAutoTune}
+            disabled={tuning}
+            className="w-full inline-flex items-center justify-center gap-2 h-9 border border-emerald-glow/60 text-emerald-glow hover:bg-emerald-glow/10 disabled:opacity-60 disabled:cursor-not-allowed font-mono text-[10px] tracking-[0.3em]"
+          >
+            <Wand2 className="w-3.5 h-3.5" />
+            {tuning ? `AUTO-TUNING ${Math.round(tunePct * 100)}%` : "AUTO-TUNE (8s)"}
+          </button>
+
           {/* Always-available manual reset */}
           <button
             onClick={onForceReset}
