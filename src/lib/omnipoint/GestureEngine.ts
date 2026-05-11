@@ -337,6 +337,12 @@ export class GestureEngine {
     this.emitMotion(primary.state, finalGesture, finalPressure, finalHand);
     this.lastPrimary = primary.side;
 
+    // Idle tracker — reset on any actionable gesture or rapid cursor motion.
+    const movingFast = primary.state.cursorSpeed > 0.06;
+    const hasAction = finalGesture !== "none" && finalGesture !== "point";
+    if (movingFast || hasAction) this.idleSinceMs = 0;
+    else if (this.idleSinceMs === 0) this.idleSinceMs = tNow;
+
     const allLandmarks = frames.flatMap((f) => f.landmarks);
     const handsDebug = this.createDebug(frames, primary.side);
     const handsLive: HandLiveFrame[] = frames.map((f) => ({
